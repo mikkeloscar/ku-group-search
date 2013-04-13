@@ -1,9 +1,36 @@
 /**
+ * Group Crawler
+ */
+function GroupCrawler (param) {
+    this.url = param.url;
+    this.url_pattern = new RegExp(param.pattern, 'i');
+
+    /**
+     * Category object
+     */
+    this.category = param.category;
+
+    this.title_class_pattern = new RegExp(param.title_pattern, 'i');
+}
+
+GroupCrawler.prototype = {
+
+    /**
+     * Crawl method
+     */
+    crawl: function () {
+        var self = this;
+        throw "Not implemented yet!";
+    }
+}
+
+
+/**
  * Category Crawler
  *
  * @param object param with url and url pattern.
  */
-function CategoryCrawler(param) {
+function CategoryCrawler (param) {
     this.url = param.url;
     this.url_pattern = new RegExp(param.pattern, 'i');
 }
@@ -22,7 +49,7 @@ CategoryCrawler.prototype = {
 
         $.ajax({
             url: this.url,
-            success: function(data) {
+            success: function (data) {
                 $(data).find("a").each(function() {
                     var href = $(this).attr('href');
                     if (self.url_pattern.test(href)) {
