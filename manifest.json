@@ -1,0 +1,18 @@
+{
+    "name": "KU Groups Search",
+    "version": "0.1",
+    "manifest_version": 2,
+    "description": "Crawl kunet.dk and provide search for groups",
+    "permissions": ["https://groups.ku.dk/*"],
+    "content_scripts": [
+        {
+            "matches": ["https://groups.ku.dk/*"],
+            "css": ["css/form.css"],
+            "js": [
+                "js/jquery-1.8.0.min.js",
+                "js/crawler.js",
+                "js/main.js"
+                ]
+        }
+    ]
+}
