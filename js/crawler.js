@@ -3,42 +3,42 @@
  *
  * @param param  Includes page url, category etc.
  */
-function GroupCrawler (param) {
+function GroupCrawler (options) {
 
   /**
    * Page url
    */
-  this.url = param.category.url
+  this.url = options.category.url;
 
   /**
    * Category object
    */
-  this.category = param.category
+  this.category = options.category;
 
   /**
    * Title html class
    */
-  this.title_class = param.title_class
+  this.title_class = options.title_class;
 
   /**
    * Description html class
    */
-  this.desc_class = param.desc_class
+  this.desc_class = options.desc_class;
 
   /**
    * List of groups
    */
-  this.groups = new Array()
+  this.groups = [];
 
   /**
    * Regex to find the __doPostBack function on page
    */
-  this.asp_pattern = new RegExp("__doPostBack", 'i')
+  this.asp_pattern = new RegExp("__doPostBack", 'i');
   
   /**
    * Regex to extract doPostBack function arguments
    */
-  this.dpb_regex = /[^\(\']+(?=\'[,\)])/g
+  this.dpb_regex = /[^\(\']+(?=\'[,\)])/g;
 
 }
 
@@ -53,58 +53,76 @@ GroupCrawler.prototype = {
    *              Give null if this is the init call of this method.
    */
   crawl: function (data) {
-    var self = this
+    var self = this;
 
-    var more = false
+    var requestCounter = 0;
+    var dfd = $.Deferred();
 
-    var formData = null
+    function request (formData) {
+        requestCounter++;
+        return $.ajax({
+            type: "POST",
+            url: self.url,
+            data: formData
+        }).always(function() {
+          requestCounter--;
+          // We might queue more requests in the done handler, so just in case
+          // wait til the next event loop to dispatch the complete
+          setTimeout(function() {
+            if (!requestCounter) {
+              dfd.resolve();
+            }
+          }, 0);
+        });
+      }
+    
+    function innerCrawl (data) {
+      var more = false;
 
-    if (!data) { // Init call
-      more = true
-    } else { // handle __doPostBack
+      var formData = null;
 
-      data = data.trim()
+      if (!data) { // Init call
+        more = true;
+      } else { // handle __doPostBack
 
-      var args = { target: null, argument: null }
+        data = data.trim();
 
-      $(data).find('a').each( function () {
-        var href = $(this).attr('href')
-        if (self.asp_pattern.test(href)) {
-          // We have found the navigation
-          var img = $(this).find('img')
-          if (img.attr('alt') == 'Next') {
-            // We have found more pages
-            more = true
-            // Parse __doPostBack args
-            var result = href.match(self.dpb_regex)
-            args.target = result[0]
-            args.argument = result[1]
+        var args = { target: null, argument: null };
+
+        $(data).find('a').each( function () {
+          var href = $(this).attr('href');
+          if (self.asp_pattern.test(href)) {
+            // We have found the navigation
+            var img = $(this).find('img');
+            if (img.attr('alt') == 'Next') {
+              // We have found more pages
+              more = true;
+              // Parse __doPostBack args
+              var result = href.match(self.dpb_regex);
+              args.target = result[0];
+              args.argument = result[1];
+            }
           }
-        }
-      })
+        })
 
-      var theForm = $(data).find('form[name="aspnetForm"]')
+        var theForm = $(data).find('form[name="aspnetForm"]');
 
-      theForm.find('[name="__EVENTTARGET"]').val(args.target)
-      theForm.find('[name="__EVENTARGUMENT"]').val(args.argument)
+        theForm.find('[name="__EVENTTARGET"]').val(args.target);
+        theForm.find('[name="__EVENTARGUMENT"]').val(args.argument);
 
-      formData = $(theForm).serialize()
-    }
+        formData = $(theForm).serialize();
+      }
 
-    if (more) { // More pages!
-      $.ajax({
-          type: "POST",
-          url: this.url,
-          data: formData
-      }).done( function (data) {
+      if (more) { // More pages!
+        request(formData).done( function (data) {
           $(data.trim()).find(self.title_class).each( function () {
-            var a = $(this).find('a')
-            var href = a.attr('href')
-            var name = a.html()
-            var next = $(this).parent().next('tr')
-            var desc = ''
+            var a = $(this).find('a');
+            var href = a.attr('href');
+            var name = a.html();
+            var next = $(this).parent().next('tr');
+            var desc = '';
             if (next.find(self.desc_class).length) {
-              var desc = next.find(self.desc_class).find('span').html()
+              var desc = next.find(self.desc_class).find('span').html();
             }
             group = { name: name,
                       url: href,
@@ -112,13 +130,17 @@ GroupCrawler.prototype = {
                       cat: self.category.head_cat,
                       sub_cat: self.category.sub_cat,
                       cat_url: self.category.url,
-                    }
-            self.groups.push(group)
-            console.log("count")
+                    };
+            self.groups.push(group);
+            console.log("count");
           })
-        self.crawl(data)
-      })
+          innerCrawl(data);
+        })
+      }
     }
+    // init crawl
+    innerCrawl(data);
+    return dfd.promise();
   }
 }
 
@@ -133,17 +155,17 @@ function CategoryCrawler (param) {
   /**
    * Categories url
    */
-  this.url = param.url
+  this.url = param.url;
   
   /**
    * regex url pattern
    */
-  this.url_pattern = new RegExp(param.pattern, 'i')
+  this.url_pattern = new RegExp(param.pattern, 'i');
 
   /**
    * Param object to be passed to the GroupCrawler
    */
-  this.group_args = param.group
+  this.group_args = param.group;
 
 }
 
@@ -155,34 +177,49 @@ CategoryCrawler.prototype = {
    * Open url and collect sub categories and links
    */
   crawl: function () {
-    var self = this
+    var self = this;
     console.log("Crawling categories...")
 
-    var categories = new Array()
+      var dfd = $.Deferred();
+
+    var categories = [];
+
+    var options = [];
 
     $.ajax({
       url: this.url
     }).done( function (data) {
-      $(data.trim()).find("a").each( function() {
-        var href = $(this).attr('href')
+      $(data.trim()).find("a").each( function () {
+        var href = $(this).attr('href');
         if (self.url_pattern.test(href)) {
-          var title = $(this).html()
-          var head_category = $(this).parent().parent().parent().find(".headertitle").html()
+          var title = $(this).html();
+          var head_category = $(this).parent().parent().parent().find(".headertitle").html();
           var category = { sub_cat: title, 
                            url: href,
                            head_cat: head_category
-                         }
+                         };
           categories.push(category)
 
           // crawl groups
           var param = { category: category,
                         title_class: self.group_args.title_class,
                         desc_class: self.group_args.desc_class,
-                      }
-          var groupCrawler = new GroupCrawler(param)
-          groupCrawler.crawl(null)
+                      };
+          options.push(param);
         }
       })
+      // wait for stuff to be done here
+      var promises = [];
+
+      for (var i=0; i < options.length; i++) {
+        var groupCrawler = new GroupCrawler(options[i]);
+        promises.push(groupCrawler.crawl(null));
+      }
+
+      $.when.apply($, promises).done( function () {
+        dfd.resolve();
+      });
     })
+    return dfd.promise();
   }
 }

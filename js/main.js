@@ -8,5 +8,8 @@ var args = { url: "https://groups.ku.dk/Sider/category.aspx",
 
 var MyCategoryCrawler = new CategoryCrawler(args)
 
-MyCategoryCrawler.crawl()
+
+MyCategoryCrawler.crawl().done(function () {
+  console.log("All done");
+})
 
