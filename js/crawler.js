@@ -63,6 +63,8 @@ GroupCrawler.prototype = {
       more = true;
     } else { // handle __doPostBack
 
+      data = data.trim();
+
       var args = { target: null, argument: null };
 
       $(data).find('a').each( function () {
@@ -93,29 +95,28 @@ GroupCrawler.prototype = {
       $.ajax({
           type: "POST",
           url: this.url,
-          data: formData,
-          success: function (data) {
-            $(data).find(self.title_class).each( function () {
-              var a = $(this).find('a');
-              var href = a.attr('href');
-              var name = a.html();
-              var next = $(this).parent().next('tr');
-              var desc = '';
-              if (next.find(self.desc_class).length) {
-                var desc = next.find(self.desc_class).find('span').html();
-              }
-              group = { name: name,
-                        url: href,
-                        desc: desc,
-                        cat: self.category.head_cat,
-                        sub_cat: self.category.sub_cat,
-                        cat_url: self.category.url,
-                      };
-              self.groups.push(group);
-              console.log("count");
-            });
-          self.crawl(data);
-        }
+          data: formData
+      }).done( function (data) {
+          $(data.trim()).find(self.title_class).each( function () {
+            var a = $(this).find('a');
+            var href = a.attr('href');
+            var name = a.html();
+            var next = $(this).parent().next('tr');
+            var desc = '';
+            if (next.find(self.desc_class).length) {
+              var desc = next.find(self.desc_class).find('span').html();
+            }
+            group = { name: name,
+                      url: href,
+                      desc: desc,
+                      cat: self.category.head_cat,
+                      sub_cat: self.category.sub_cat,
+                      cat_url: self.category.url,
+                    };
+            self.groups.push(group);
+            console.log("count");
+          });
+        self.crawl(data);
       });
     }
   }
@@ -160,29 +161,28 @@ CategoryCrawler.prototype = {
     var categories = new Array();
 
     $.ajax({
-      url: this.url,
-      success: function (data) {
-        $(data).find("a").each( function() {
-          var href = $(this).attr('href');
-          if (self.url_pattern.test(href)) {
-            var title = $(this).html();
-            var head_category = $(this).parent().parent().parent().find(".headertitle").html();
-            var category = { sub_cat: title, 
-                             url: href,
-                             head_cat: head_category
-                           };
-            categories.push(category);
+      url: this.url
+    }).done( function (data) {
+      $(data.trim()).find("a").each( function() {
+        var href = $(this).attr('href');
+        if (self.url_pattern.test(href)) {
+          var title = $(this).html();
+          var head_category = $(this).parent().parent().parent().find(".headertitle").html();
+          var category = { sub_cat: title, 
+                           url: href,
+                           head_cat: head_category
+                         };
+          categories.push(category);
 
-            // crawl groups
-            var param = { category: category,
-                          title_class: self.group_args.title_class,
-                          desc_class: self.group_args.desc_class,
-                        }
-            var groupCrawler = new GroupCrawler(param);
-            groupCrawler.crawl(null);
-          }
-        });
-      }
+          // crawl groups
+          var param = { category: category,
+                        title_class: self.group_args.title_class,
+                        desc_class: self.group_args.desc_class,
+                      }
+          var groupCrawler = new GroupCrawler(param);
+          groupCrawler.crawl(null);
+        }
+      });
     });
   }
 }
