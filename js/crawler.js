@@ -59,10 +59,10 @@ GroupCrawler.prototype = {
                 }
             });
 
-            var theForm = document.forms['aspnetForm'];
+            var theForm = $(data).find('form[name="aspnetForm"]');
 
-            theForm.__EVENTTARGET.value = args.target;
-            theForm.__EVENTARGUMENT.value = args.argument;
+            theForm.find('[name=__EVENTTARGET]').val(args.target);
+            theForm.find('[name=__EVENTARGUMENT]').val(args.argument);
 
             formData = $(theForm).serialize(); 
         }
