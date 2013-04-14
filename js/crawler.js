@@ -9,13 +9,29 @@ function GroupCrawler (param) {
      */
     this.category = param.category;
 
+    /**
+     * Title html class
+     */
     this.title_class = param.title_class;
+
+    /**
+     * Description html class
+     */
     this.desc_class = param.desc_class;
 
+    /**
+     * List of groups
+     */
     this.groups = new Array();
 
+    /**
+     * Regex to find the __doPostBack function on page
+     */
     this.asp_pattern = new RegExp("__doPostBack", 'i');
     
+    /**
+     * Regex to extract doPostBack function arguments
+     */
     this.dpb_regex = /[^\(\']+(?=\'[,\)])/g;
 
 }
@@ -25,10 +41,10 @@ GroupCrawler.prototype = {
     /**
      * Crawls through every page by handling ASP.NET __doPostBack crap
      *
-     * The __doPostBack hack is ugly, but so is the page we are working with.
+     * The __doPostBack hack is ugly, but so is the page we are working with
      *
-     * @param data, data returned from previous ajax call. Give null, 
-     * if this is the init call of this method.
+     * @param data  data returned from previous ajax call.
+     *              Give null if this is the init call of this method.
      */
     crawl: function (data) {
         var self = this;
@@ -61,8 +77,8 @@ GroupCrawler.prototype = {
 
             var theForm = $(data).find('form[name="aspnetForm"]');
 
-            theForm.find('[name=__EVENTTARGET]').val(args.target);
-            theForm.find('[name=__EVENTARGUMENT]').val(args.argument);
+            theForm.find('[name="__EVENTTARGET"]').val(args.target);
+            theForm.find('[name="__EVENTARGUMENT"]').val(args.argument);
 
             formData = $(theForm).serialize(); 
         }
@@ -103,11 +119,16 @@ GroupCrawler.prototype = {
 /**
  * Category Crawler
  *
- * @param object param with url and url pattern.
+ * @param param  object param with url and url pattern
  */
 function CategoryCrawler (param) {
     this.url = param.url;
     this.url_pattern = new RegExp(param.pattern, 'i');
+
+    /**
+     * Param object to be passed to the GroupCrawler
+     */
+    this.group_args = param.group;
 }
 
 CategoryCrawler.prototype = {
@@ -138,9 +159,9 @@ CategoryCrawler.prototype = {
 
                         // crawl groups
                         var param = { category: category,
-                                      title_class: '.ms-sitedirresultstitle',
-                                      desc_class: '.ms-sitedirresultsdescription',
-                        }
+                                      title_class: self.group_args.title_class,
+                                      desc_class: self.group_args.desc_class,
+                                    }
                         var groupCrawler = new GroupCrawler(param);
                         groupCrawler.crawl(null);
                     }
