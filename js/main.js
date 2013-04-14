@@ -4,9 +4,9 @@ var args = { url: "https://groups.ku.dk/Sider/category.aspx",
              group: { title_class: '.ms-sitedirresultstitle',
                       desc_class: '.ms-sitedirresultsdescription',
                     }
-           };
+           }
 
-var MyCategoryCrawler = new CategoryCrawler(args);
+var MyCategoryCrawler = new CategoryCrawler(args)
 
-MyCategoryCrawler.crawl();
+MyCategoryCrawler.crawl()
 
