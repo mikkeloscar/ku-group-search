@@ -33,7 +33,7 @@ function GroupCrawler (options) {
   /**
    * Regex to find the __doPostBack function on page
    */
-  this.asp_pattern = new RegExp("__doPostBack", 'i');
+  this.asp_pattern = new RegExp("__doPostBack", "i");
   
   /**
    * Regex to extract doPostBack function arguments
@@ -160,7 +160,7 @@ function CategoryCrawler (param) {
   /**
    * regex url pattern
    */
-  this.url_pattern = new RegExp(param.pattern, 'i');
+  this.url_pattern = new RegExp(param.pattern, "i");
 
   /**
    * Param object to be passed to the GroupCrawler
@@ -181,7 +181,7 @@ CategoryCrawler.prototype = {
     var self = this;
     console.log("Crawling categories...");
 
-      var dfd = $.Deferred();
+    var dfd = $.Deferred();
 
     var categories = [];
 
@@ -210,7 +210,7 @@ CategoryCrawler.prototype = {
           options.push(param);
         }
       });
-      // wait for ajax stuff to be done
+
       var promises = [];
 
       for (var i = 0; i < options.length; i++) {
@@ -218,6 +218,7 @@ CategoryCrawler.prototype = {
         promises.push(groupCrawler.crawl(null));
       }
 
+      // wait for ajax calls to be done
       $.when.apply($, promises).done(function () {
         var groups = self._mkGroupList(arguments);
         dfd.resolve(categories, groups);
