@@ -216,7 +216,9 @@
   text-decoration: none;
 }
 
-#ku-group-search a:hover {
+#ku-group-search a:hover,
+#ku-group-search a:active,
+#ku-group-search a:focus {
   background-color: #f9f9f9;
 }
 

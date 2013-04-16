@@ -230,12 +230,13 @@ var kuGroup = new function () {
         dfd.resolve("complete!");
       } else {
         console.log("no DB");
+        self.updateBtn("none");
         dfd.fail("No DB");
+
       }
 
     } else if (term.length == 0) {
-      var resultbox = $("#ku-gs-results").next();
-      resultbox.html("");
+      $("#ku-gs-results").html("");
       dfd.fail("Searchterm empty");
     }
     return dfd.promise();
@@ -254,15 +255,30 @@ var kuGroup = new function () {
       self.saveData(cats, groups);
       self.initDB();
 
-      $("#ku-gs-progress-wrap").fadeOut("fast");
-      $("#ku-gs-btn-update").removeClass(function (i, curr) {
-        return curr;
-      }).addClass("ku-gs-btn-success");
-
-      $("#ku-gs-btn-desc").html("" + groups.length + " groups indexed.");
-      $("#ku-gs-btn-desc").addClass("ku-gs-btn-desc-success");
-      $("#ku-gs-btn-desc").fadeIn("slow");
+      self.updateBtn("ok", groups);
     });
+  };
+
+  self.updateBtn = function (status) {
+    if (status === "none") {
+      var bClass = "danger";
+    } else if (status === "old") {
+      var bClass = "warning";
+    } else if (status === "ok") {
+      var bClass = "success";
+      $("#ku-gs-btn-desc").html("" + arguments[1].length + " groups indexed.");
+    }
+
+    var btnClass = "ku-gs-btn-" + bClass;
+    var descClass = "ku-gs-btn-desc-" + bClass;
+
+    $("#ku-gs-progress-wrap").fadeOut("fast");
+    $("#ku-gs-btn-update").removeClass(function (i, curr) {
+      return curr;
+    }).addClass(btnClass);
+
+    $("#ku-gs-btn-desc").addClass(descClass);
+    $("#ku-gs-btn-desc").fadeIn("slow");
   };
 };
 
