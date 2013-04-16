@@ -5,6 +5,33 @@ var args = { url: "https://groups.ku.dk/Sider/category.aspx",
                     }
            };
 
+// Returns a function, that, as long as it continues to be invoked, will not
+// be triggered. The function will be called after it stops being called for
+// N milliseconds. If `immediate` is passed, trigger the function on the
+// leading edge, instead of the trailing.
+//
+// From: http://stackoverflow.com/questions/12538344/asynchronous-keyup-events
+// -how-to-short-circuit-sequential-keyup-events-for-speed 
+var debounce = function(func, wait, immediate) {
+    var timeout;
+    return function() {
+        var context = this, args = arguments;
+        var later = function() {
+            timeout = null;
+            if (!immediate) {
+                func.apply(context, args);
+            }
+        };
+        if (immediate && !timeout) {
+            func.apply(context, args);
+        }
+
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
+
+
 /**
  * kuGroup namspace
  */
@@ -135,56 +162,58 @@ var kuGroup = new function () {
   };
 
   self.search = function () {
+
+      self.query().done(function (msg) {
+        console.log(msg);
+      })
+      .fail(function (err) {
+        console.log(err);
+      });
+  };
+
+  self.query = function () {
     var term = $("#ku-gs-search").val();
+
+    // Make the query operation async
+    var dfd = $.Deferred();
 
     if (term.length > 1) {
       console.log("searching..");
       //continue
       $("#ku-gs-results").html("");
 
-      self.query(term).done(function (records) {
+      var db = self.readDB();
+      if (db) {
+        // build query
+        var query = [{name:{likenocase:term}}];
+
+        // Check for category select
+        var cat = $("#ku-gs-cat-select").val();
+        var subcat = $("#ku-gs-subcat-select").val();
+
+        if (cat !== "all" && subcat !== "all") {
+          query = [{name:{likenocase:term},cat:{is:cat},sub_cat:{is:subcat}}];
+        } else if (cat !== "all") {
+          query = [{name:{likenocase:term},cat:{is:cat}}];
+        } else if (subcat !== "all") {
+          query = [{name:{likenocase:term},sub_cat:{is:subcat}}];
+        }
+
+        var records = db(query);
         records.each(function (record) {
           self.showResults(record);
         });
-      })
-      .fail(function (err) {
-        console.log(err);
-      });
+        dfd.resolve("complete!");
+      } else {
+        console.log("no DB");
+        dfd.fail("No DB");
+      }
+
     } else if (term.length == 0) {
       var resultbox = $("#ku-gs-results").next();
       resultbox.html("");
+      dfd.fail("Searchterm empty");
     }
-  };
-
-  self.query = function (term) {
-
-    // Make the query operation async
-    var dfd = $.Deferred();
-
-    var db = self.readDB();
-    if (db) {
-      // build query
-      var query = [{name:{likenocase:term}}];
-
-      // Check for category select
-      var cat = $("#ku-gs-cat-select").val();
-      var subcat = $("#ku-gs-subcat-select").val();
-
-      if (cat !== "all" && subcat !== "all") {
-        query = [{name:{likenocase:term},cat:{is:cat},sub_cat:{is:subcat}}];
-      } else if (cat !== "all") {
-        query = [{name:{likenocase:term},cat:{is:cat}}];
-      } else if (subcat !== "all") {
-        query = [{name:{likenocase:term},sub_cat:{is:subcat}}];
-      }
-
-      var records = db(query);
-      dfd.resolve(records);
-    } else {
-      console.log("no DB");
-      dfd.fail("No DB");
-    }
-
     return dfd.promise();
   };
 
@@ -210,6 +239,6 @@ kuGroup.populateSelects();
 
 // bind events
 $("#ku-gs-btn-update").on("click", kuGroup.crawl);
-$("#ku-gs-search").on("keyup", kuGroup.search);
+$("#ku-gs-search").on("keyup", debounce(kuGroup.search, 300));
 $("#ku-gs-cat-select").on("change", kuGroup.search);
 $("#ku-gs-subcat-select").on("change", kuGroup.search);
