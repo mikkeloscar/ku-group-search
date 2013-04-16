@@ -16,7 +16,7 @@ var kuGroup = new function () {
 
   var totalCount = 0;
 
-  var index = null;
+  var db = null;
 
   self.createForm = function (parent) {
     var html = $('<div id="ku-group-search">\
@@ -51,29 +51,21 @@ var kuGroup = new function () {
     $("#ku-gs-results").append(html);
   };
 
-  self.createIndex = function () {
+  self.initDB = function () {
     var data = self.loadData();
 
     if (data) {
 
-      var table = jOrder(data.groups)
-          .index('url', ['url'],   { grouped:true, 
-                                     ordered:true, 
-                                     type:jOrder.text})
-          .index('name', ['name'], { grouped:true, 
-                                     ordered:true, 
-                                     type:jOrder.text})
-          .index('desc', ['desc'], { grouped:true, 
-                                     ordered:true, 
-                                     type:jOrder.text});
-      index = table;
+      var table = TAFFY(data.groups);
+
+      db = table;
     } else {
-      index = null;
+      db = null;
     }
   };
 
-  self.getIndex = function () {
-    return index;
+  self.readDB = function () {
+    return db;
   };
 
   self.loadData = function () {
@@ -114,22 +106,21 @@ var kuGroup = new function () {
   self.search = function () {
     var term = $(this).val();
 
-    if (term.length > 2) {
+    if (term.length > 1) {
       console.log("searching..");
       //continue
       var resultbox = $(this).next();
       resultbox.html("");
-      var table = self.getIndex();
-      if (table) {
-        var records = table.where([{ name: term }, { url: term }, { desc: term}],
-                                   {mode:jOrder.startof});
-        for (var i = 0; i < records.length; i++) {
-          if (records[i]) {
-            self.showResults(records[i]);
-          }
-        }
+
+      var db = self.readDB();
+      if (db) {
+        var query = [ {name:{likenocase:term}}];
+        var records = db(query);
+        records.each(function (r) {
+          self.showResults(r);
+        });
       } else {
-        console.log("no index");
+        console.log("no DB");
       }
     } else if (term.length == 0) {
       var resultbox = $(this).next();
@@ -142,7 +133,7 @@ var kuGroup = new function () {
 };
 
 kuGroup.createForm("#ctl00_MSO_ContentDiv");
-kuGroup.createIndex();
+kuGroup.initDB();
 
 $("#ku-gs-btn-update").on("click", function () {
   var MyCategoryCrawler = new CategoryCrawler(args);
@@ -154,7 +145,7 @@ $("#ku-gs-btn-update").on("click", function () {
     console.log("Groups: " + groups.length);
     
     kuGroup.saveData(categories, groups);
-    kuGroup.createIndex();
+    kuGroup.initDB();
   });
 });
 
