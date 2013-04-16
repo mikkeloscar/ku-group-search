@@ -9,7 +9,9 @@ var args = { url: "https://groups.ku.dk/Sider/category.aspx",
 var MyCategoryCrawler = new CategoryCrawler(args)
 
 
-MyCategoryCrawler.crawl().done(function () {
+MyCategoryCrawler.crawl().done(function (categories, groups) {
   console.log("All done");
+  console.log(categories);
+  console.log(groups);
 })
 
