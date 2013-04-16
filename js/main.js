@@ -47,8 +47,10 @@ var kuGroup = new function () {
 
   var crawlOptions = null;
 
-  self.init = function (options) {
+  self.init = function (options, total) {
     crawlOptions = options;
+
+    totalCount = total;
   }
 
   self.createForm = function (parent) {
@@ -56,6 +58,9 @@ var kuGroup = new function () {
       <div class="ku-gs-wrap">\
         <div class="ku-gs-title">Search for group</div>\
         <div class="ku-gs-options">\
+          <div class="ku-gs-progress">\
+            <div class="ku-gs-bar" style="width: 50%"></div>\
+          </div>\
         <select id="ku-gs-cat-select">\
           <option value="all">Category (All)</option>\
         </select>\
@@ -127,16 +132,16 @@ var kuGroup = new function () {
   };
 
   self.loadData = function () {
-    var categories = JSON.parse(localStorage['categories']);
-    var groups = JSON.parse(localStorage['groups']);
-    var time = parseInt(localStorage['time']);
+    var categories = JSON.parse(localStorage["categories"]);
+    var groups = JSON.parse(localStorage["groups"]);
+    var time = parseInt(localStorage["time"]);
 
     var data = { categories: categories,
                  groups: groups,
                  time: time
     };
 
-    if (typeof time === 'undefined') {
+    if (typeof time === "undefined") {
       data = null;
     }
 
@@ -151,6 +156,22 @@ var kuGroup = new function () {
 
   self.increaseCount = function () {
     counter++;
+    $(".ku-gs-progress").trigger("progress");
+  };
+
+  self.updateProgress = function () {
+    var progress = 0;
+
+    if (counter > totalCount) {
+      progress = 100;
+    } else if (counter > 0) {
+      progress = counter/totalCount * 100;
+    }
+
+    if (progress > 100) {
+      progress = 100;
+    }
+    $(".ku-gs-bar").css("width", "" + progress + "%");
   };
 
   self.resetCounter = function () {
@@ -162,7 +183,6 @@ var kuGroup = new function () {
   };
 
   self.search = function () {
-
       self.query().done(function (msg) {
         console.log(msg);
       })
@@ -218,9 +238,10 @@ var kuGroup = new function () {
   };
 
   self.crawl = function () {
+    self.resetCounter();
     var MyCategoryCrawler = new CategoryCrawler(crawlOptions);
 
-    MyCategoryCrawler.crawl(self.increasecount).done(function (cats, groups) {
+    MyCategoryCrawler.crawl(self.increaseCount).done(function (cats, groups) {
       console.log("All done");
 
       console.log("Groups: " + groups.length);
@@ -232,7 +253,7 @@ var kuGroup = new function () {
 };
 
 // setup
-kuGroup.init();
+kuGroup.init(args, 4347);
 kuGroup.createForm("#ctl00_MSO_ContentDiv");
 kuGroup.initDB();
 kuGroup.populateSelects();
@@ -242,3 +263,5 @@ $("#ku-gs-btn-update").on("click", kuGroup.crawl);
 $("#ku-gs-search").on("keyup", debounce(kuGroup.search, 300));
 $("#ku-gs-cat-select").on("change", kuGroup.search);
 $("#ku-gs-subcat-select").on("change", kuGroup.search);
+
+$(".ku-gs-progress").on("progress", kuGroup.updateProgress);

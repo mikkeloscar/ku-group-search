@@ -52,7 +52,7 @@ GroupCrawler.prototype = {
    * @param data  data returned from previous ajax call.
    *              Give null if this is the init call of this method.
    */
-  crawl: function (data) {
+  crawl: function (data, callback) {
     var self = this;
 
     var requestCounter = 0;
@@ -132,7 +132,7 @@ GroupCrawler.prototype = {
                       cat_url: self.category.url,
                     };
             self.groups.push(group);
-            console.log("count");
+            callback();
           });
           innerCrawl(data);
         });
@@ -215,7 +215,7 @@ CategoryCrawler.prototype = {
 
       for (var i = 0; i < options.length; i++) {
         var groupCrawler = new GroupCrawler(options[i]);
-        promises.push(groupCrawler.crawl(null));
+        promises.push(groupCrawler.crawl(null, callback));
       }
 
       // wait for ajax calls to be done
