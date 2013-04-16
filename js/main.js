@@ -58,8 +58,11 @@ var kuGroup = new function () {
       <div class="ku-gs-wrap">\
         <div class="ku-gs-title">Search for group</div>\
         <div class="ku-gs-options">\
-          <div class="ku-gs-progress">\
-            <div class="ku-gs-bar" style="width: 50%"></div>\
+          <div id="ku-gs-progress-wrap">\
+            <span id="ku-gs-data">Updating index..</span>\
+            <div class="ku-gs-progress">\
+              <div class="ku-gs-bar"></div>\
+            </div>\
           </div>\
         <select id="ku-gs-cat-select">\
           <option value="all">Category (All)</option>\
@@ -68,6 +71,7 @@ var kuGroup = new function () {
           <option value="all">Sub Category (All)</option>\
         </select>\
         <button type="button" id="ku-gs-btn-update">Update Index</button>\
+        <span id="ku-gs-btn-desc"></span>\
       </div>\
         <input type="text" name="search" id="ku-gs-search"\
         placeholder="Search..">\
@@ -239,6 +243,7 @@ var kuGroup = new function () {
 
   self.crawl = function () {
     self.resetCounter();
+    $("#ku-gs-progress-wrap").show();
     var MyCategoryCrawler = new CategoryCrawler(crawlOptions);
 
     MyCategoryCrawler.crawl(self.increaseCount).done(function (cats, groups) {
@@ -248,6 +253,15 @@ var kuGroup = new function () {
       
       self.saveData(cats, groups);
       self.initDB();
+
+      $("#ku-gs-progress-wrap").fadeOut("fast");
+      $("#ku-gs-btn-update").removeClass(function (i, curr) {
+        return curr;
+      }).addClass("ku-gs-btn-success");
+
+      $("#ku-gs-btn-desc").html("" + groups.length + " groups indexed.");
+      $("#ku-gs-btn-desc").addClass("ku-gs-btn-desc-success");
+      $("#ku-gs-btn-desc").fadeIn("slow");
     });
   };
 };

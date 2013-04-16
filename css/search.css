@@ -62,7 +62,7 @@
 #ku-group-search button {
   float: right;
   padding: 4px 12px;
-  margin-bottom: 0;
+  margin-bottom: 0 0 10px 0;
   font-size: 14px;
   line-height: 20px;
   color: #333;
@@ -76,7 +76,7 @@
   border: 1px solid #ccc;
   border-bottom-color: #b3b3b3;
   border-radius: 4px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 255, 0.2),
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
   0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -102,8 +102,72 @@
   cursor: default;
   background-image: none;
   opacity: 0.65;
-  filter: alpha(opacity=65);
   box-shadow: none;
+}
+
+#ku-group-search .ku-gs-btn-success {
+  color: white;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  background-color: #5bb75b;
+  background-image: linear-gradient(to bottom, #62c462, #51a351);
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+}
+
+#ku-group-search .ku-gs-btn-success:hover,
+#ku-group-search .ku-gs-btn-success:focus,
+#ku-group-search .ku-gs-btn-success:active,
+#ku-group-search .ku-gs-btn-success[disabled] {
+  color: white;
+  background-color: #51a351;
+  *background-color: #499249;
+}
+
+#ku-group-search .ku-gs-btn-danger {
+  color: white;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  background-color: #da4f49;
+  background-image: linear-gradient(to bottom, #ee5f5b, #bd362f);
+  background-repeat: repeat-x;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+}
+
+#ku-group-search .ku-gs-btn-danger:hover,
+#ku-group-search .ku-gs-btn-danger:focus,
+#ku-group-search .ku-gs-btn-danger:active,
+#ku-group-search .ku-gs-btn-danger[disabled] {
+  color: white;
+  background-color: #bd362f;
+  *background-color: #a9302a;
+}
+
+#ku-group-search .ku-gs-btn-warning {
+  color: white;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  background-color: #faa732;
+  background-image: linear-gradient(to bottom, #fbb450, #f89406);
+  background-repeat: repeat-x;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+}
+
+#ku-group-search .ku-gs-btn-warning:hover,
+#ku-group-search .ku-gs-btn-warning:focus,
+#ku-group-search .ku-gs-btn-warning:active,
+#ku-group-search .ku-gs-btn-warning[disabled] {
+  color: white;
+  background-color: #f89406;
+  *background-color: #df8505;
+}
+
+#ku-group-search #ku-gs-btn-desc {
+  float: right;
+  font-size: 13px;
+  line-height: 30px;
+  padding: 0 10px;
+  display: none;
+}
+
+#ku-group-search .ku-gs-btn-desc-success {
+  color: #5bb75b;
 }
 
 #ku-group-search .ku-gs-progress .ku-gs-bar {
@@ -125,6 +189,10 @@
   box-sizing: border-box;
   transition: width 0.6s ease;
 
+}
+
+#ku-group-search #ku-gs-progress-wrap {
+  display: none;
 }
 
 #ku-group-search .ku-gs-progress {
