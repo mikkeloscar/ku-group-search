@@ -142,34 +142,50 @@ var kuGroup = new function () {
       //continue
       $("#ku-gs-results").html("");
 
-      var db = self.readDB();
-      if (db) {
-        // build query
-        var query = [{name:{likenocase:term}}];
-
-        // Check for category select
-        var cat = $("#ku-gs-cat-select").val();
-        var subcat = $("#ku-gs-subcat-select").val();
-
-        if (cat !== "all" && subcat !== "all") {
-          query = [{name:{likenocase:term},cat:{is:cat},sub_cat:{is:subcat}}];
-        } else if (cat !== "all") {
-          query = [{name:{likenocase:term},cat:{is:cat}}];
-        } else if (subcat !== "all") {
-          query = [{name:{likenocase:term},sub_cat:{is:subcat}}];
-        }
-
-        var records = db(query);
-        records.each(function (r) {
-          self.showResults(r);
+      self.query(term).done(function (records) {
+        records.each(function (record) {
+          self.showResults(record);
         });
-      } else {
-        console.log("no DB");
-      }
+      })
+      .fail(function (err) {
+        console.log(err);
+      });
     } else if (term.length == 0) {
-      var resultbox = $(this).next();
+      var resultbox = $("#ku-gs-results").next();
       resultbox.html("");
     }
+  };
+
+  self.query = function (term) {
+
+    // Make the query operation async
+    var dfd = $.Deferred();
+
+    var db = self.readDB();
+    if (db) {
+      // build query
+      var query = [{name:{likenocase:term}}];
+
+      // Check for category select
+      var cat = $("#ku-gs-cat-select").val();
+      var subcat = $("#ku-gs-subcat-select").val();
+
+      if (cat !== "all" && subcat !== "all") {
+        query = [{name:{likenocase:term},cat:{is:cat},sub_cat:{is:subcat}}];
+      } else if (cat !== "all") {
+        query = [{name:{likenocase:term},cat:{is:cat}}];
+      } else if (subcat !== "all") {
+        query = [{name:{likenocase:term},sub_cat:{is:subcat}}];
+      }
+
+      var records = db(query);
+      dfd.resolve(records);
+    } else {
+      console.log("no DB");
+      dfd.fail("No DB");
+    }
+
+    return dfd.promise();
   };
 
   self.crawl = function () {
