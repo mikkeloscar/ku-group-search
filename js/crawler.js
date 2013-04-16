@@ -127,7 +127,7 @@ GroupCrawler.prototype = {
             group = { name: name,
                       url: href,
                       desc: desc,
-                      cat: self.category.head_cat,
+                      cat: self.category.cat,
                       sub_cat: self.category.sub_cat,
                       cat_url: self.category.url,
                     };
@@ -177,7 +177,7 @@ CategoryCrawler.prototype = {
    * Open url and collect sub categories and links
    * Provides doneCallback with the arguments categories and groups
    */
-  crawl: function () {
+  crawl: function (callback) {
     var self = this;
     console.log("Crawling categories...");
 
@@ -198,7 +198,7 @@ CategoryCrawler.prototype = {
                                      .find(".headertitle").html();
           var category = { sub_cat: title, 
                            url: href,
-                           head_cat: head_category
+                           cat: head_category
                          };
           categories.push(category);
 

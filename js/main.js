@@ -18,16 +18,22 @@ var kuGroup = new function () {
 
   var db = null;
 
+  var crawlOptions = null;
+
+  self.init = function (options) {
+    crawlOptions = options;
+  }
+
   self.createForm = function (parent) {
     var html = $('<div id="ku-group-search">\
       <div class="ku-gs-wrap">\
         <div class="ku-gs-title">Search for group</div>\
         <div class="ku-gs-options">\
-        <select>\
-          <option value="all">Category</option>\
+        <select id="ku-gs-cat-select">\
+          <option value="all">Category (All)</option>\
         </select>\
-        <select>\
-          <option value="all">Sub Category</option>\
+        <select id="ku-gs-subcat-select">\
+          <option value="all">Sub Category (All)</option>\
         </select>\
         <button type="button" id="ku-gs-btn-update">Update Index</button>\
       </div>\
@@ -40,6 +46,31 @@ var kuGroup = new function () {
 
     $(parent).prepend(html);
   };
+
+  self.populateSelects = function () {
+    var data = self.loadData();
+
+    if (data) {
+      var catSelect = $("#ku-gs-cat-select");
+      var subcatSelect = $("#ku-gs-subcat-select");
+      var catList = [];
+      var subcatList = [];
+
+      $(data.categories).each(function (i, cat) {
+        if (jQuery.inArray(cat.cat, catList) == -1) {
+          catList.push(cat.cat);
+          catSelect.append('<option value="'+cat.cat+'">'+cat.cat+'</option>');
+        }
+
+        if (jQuery.inArray(cat.sub_cat, subcatList) == -1) {
+          subcatList.push(cat.sub_cat);
+          subcatSelect.append('<option value="'+cat.sub_cat+'">'+
+                              cat.sub_cat+'</option>');
+        }
+      });
+    }
+  };
+
 
   self.showResults = function (q) {
     var html = $('<a class="ku-gs-result" href="' + q.url + '">\
@@ -86,9 +117,9 @@ var kuGroup = new function () {
   };
 
   self.saveData = function (categories, groups) {
-    localStorage['categories'] = JSON.stringify(categories);
-    localStorage['groups'] = JSON.stringify(groups);
-    localStorage['time'] = Date.now();
+    localStorage["categories"] = JSON.stringify(categories);
+    localStorage["groups"] = JSON.stringify(groups);
+    localStorage["time"] = Date.now();
   };
 
   self.increaseCount = function () {
@@ -104,17 +135,30 @@ var kuGroup = new function () {
   };
 
   self.search = function () {
-    var term = $(this).val();
+    var term = $("#ku-gs-search").val();
 
     if (term.length > 1) {
       console.log("searching..");
       //continue
-      var resultbox = $(this).next();
-      resultbox.html("");
+      $("#ku-gs-results").html("");
 
       var db = self.readDB();
       if (db) {
-        var query = [ {name:{likenocase:term}}];
+        // build query
+        var query = [{name:{likenocase:term}}];
+
+        // Check for category select
+        var cat = $("#ku-gs-cat-select").val();
+        var subcat = $("#ku-gs-subcat-select").val();
+
+        if (cat !== "all" && subcat !== "all") {
+          query = [{name:{likenocase:term},cat:{is:cat},sub_cat:{is:subcat}}];
+        } else if (cat !== "all") {
+          query = [{name:{likenocase:term},cat:{is:cat}}];
+        } else if (subcat !== "all") {
+          query = [{name:{likenocase:term},sub_cat:{is:subcat}}];
+        }
+
         var records = db(query);
         records.each(function (r) {
           self.showResults(r);
@@ -125,28 +169,31 @@ var kuGroup = new function () {
     } else if (term.length == 0) {
       var resultbox = $(this).next();
       resultbox.html("");
-    } else {
-      return;
     }
-    return;
+  };
+
+  self.crawl = function () {
+    var MyCategoryCrawler = new CategoryCrawler(crawlOptions);
+
+    MyCategoryCrawler.crawl(self.increasecount).done(function (cats, groups) {
+      console.log("All done");
+
+      console.log("Groups: " + groups.length);
+      
+      self.saveData(cats, groups);
+      self.initDB();
+    });
   };
 };
 
+// setup
+kuGroup.init();
 kuGroup.createForm("#ctl00_MSO_ContentDiv");
 kuGroup.initDB();
+kuGroup.populateSelects();
 
-$("#ku-gs-btn-update").on("click", function () {
-  var MyCategoryCrawler = new CategoryCrawler(args);
-
-  MyCategoryCrawler.crawl(kuGroup.increasecount)
-  .done(function (categories, groups) {
-    console.log("All done");
-
-    console.log("Groups: " + groups.length);
-    
-    kuGroup.saveData(categories, groups);
-    kuGroup.initDB();
-  });
-});
-
+// bind events
+$("#ku-gs-btn-update").on("click", kuGroup.crawl);
 $("#ku-gs-search").on("keyup", kuGroup.search);
+$("#ku-gs-cat-select").on("change", kuGroup.search);
+$("#ku-gs-subcat-select").on("change", kuGroup.search);
