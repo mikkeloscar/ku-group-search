@@ -60,8 +60,8 @@ var kuGroup = new function () {
         <div class="ku-gs-options">\
           <div id="ku-gs-progress-wrap">\
             <span id="ku-gs-data">Updating index..</span>\
-            <div class="ku-gs-progress">\
-              <div class="ku-gs-bar"></div>\
+            <div id="ku-gs-progress" class="progress progress-striped active">\
+              <div id="ku-gs-bar" class="bar"></div>\
             </div>\
           </div>\
         <select id="ku-gs-cat-select">\
@@ -70,7 +70,8 @@ var kuGroup = new function () {
         <select id="ku-gs-subcat-select">\
           <option value="all">Sub Category (All)</option>\
         </select>\
-        <button type="button" id="ku-gs-btn-update">Update Index</button>\
+        <button type="button" id="ku-gs-btn-update" class="btn btn-success">\
+        Update Index</button>\
         <span id="ku-gs-btn-desc"></span>\
       </div>\
         <input type="text" name="search" id="ku-gs-search"\
@@ -168,7 +169,7 @@ var kuGroup = new function () {
 
   self.increaseCount = function () {
     counter++;
-    $(".ku-gs-progress").trigger("progress");
+    $("#ku-gs-progress").trigger("progress");
   };
 
   self.updateProgress = function () {
@@ -183,7 +184,7 @@ var kuGroup = new function () {
     if (progress > 100) {
       progress = 100;
     }
-    $(".ku-gs-bar").css("width", "" + progress + "%");
+    $("#ku-gs-bar").css("width", "" + progress + "%");
   };
 
   self.resetCounter = function () {
@@ -262,6 +263,7 @@ var kuGroup = new function () {
       
       self.saveData(cats, groups);
       self.initDB();
+      self.populateSelects();
 
       self.updateBtn("ok", groups);
     });
@@ -285,11 +287,11 @@ var kuGroup = new function () {
       $("#ku-gs-search").attr('disabled', false);
     }
 
-    var btnClass = "ku-gs-btn-" + bClass;
+    var btnClass = "btn btn-" + bClass;
     var descClass = "ku-gs-btn-desc-" + bClass;
 
     $("#ku-gs-progress-wrap").fadeOut("fast");
-    $(".ku-gs-bar").css('width', '0');
+    $("#ku-gs-bar").css('width', '0');
     $("#ku-gs-btn-update").removeClass(function (i, curr) {
       return curr;
     }).addClass(btnClass);
@@ -313,4 +315,4 @@ $("#ku-gs-search").on("keyup", debounce(kuGroup.search, 300));
 $("#ku-gs-cat-select").on("change", kuGroup.search);
 $("#ku-gs-subcat-select").on("change", kuGroup.search);
 
-$(".ku-gs-progress").on("progress", kuGroup.updateProgress);
+$("#ku-gs-progress").on("progress", kuGroup.updateProgress);

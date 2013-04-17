@@ -7,7 +7,7 @@
     "content_scripts": [
         {
             "matches": ["https://groups.ku.dk/*"],
-            "css": ["css/search.css"],
+            "css": ["css/bootstrap.min.css", "css/search.css"],
             "js": [
                 "js/jquery-1.9.1.min.js",
                 "js/taffy-min.js",
