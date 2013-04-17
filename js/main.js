@@ -126,8 +126,10 @@ var kuGroup = new function () {
       var table = TAFFY(data.groups);
 
       db = table;
+      self.updateBtn("ok");
     } else {
       db = null;
+      self.updateBtn("none");
     }
   };
 
@@ -136,17 +138,23 @@ var kuGroup = new function () {
   };
 
   self.loadData = function () {
-    var categories = JSON.parse(localStorage["categories"]);
-    var groups = JSON.parse(localStorage["groups"]);
-    var time = parseInt(localStorage["time"]);
+    if (typeof localStorage["categories"] === "undefined" ||
+        typeof localStorage["groups"] === "undefined" ||
+        typeof localStorage["time"] === "undefined") {
+          data = null;
+    } else {
+      var categories = JSON.parse(localStorage["categories"]);
+      var groups = JSON.parse(localStorage["groups"]);
+      var time = parseInt(localStorage["time"]);
 
-    var data = { categories: categories,
-                 groups: groups,
-                 time: time
-    };
-
-    if (typeof time === "undefined") {
-      data = null;
+      var data = { categories: categories,
+                   groups: groups,
+                   time: time
+      };
+      
+      if (typeof time === "undefined") {
+        data = null;
+      }
     }
 
     return data;
@@ -260,24 +268,35 @@ var kuGroup = new function () {
   };
 
   self.updateBtn = function (status) {
+    $("#ku-gs-btn-desc").html("");
     if (status === "none") {
       var bClass = "danger";
+      // disable search field
+      $("#ku-gs-search").attr('disabled', true);
+      $("#ku-gs-btn-desc").html("Index needs to be updated.");
     } else if (status === "old") {
       var bClass = "warning";
     } else if (status === "ok") {
       var bClass = "success";
-      $("#ku-gs-btn-desc").html("" + arguments[1].length + " groups indexed.");
+      if (typeof arguments[1] !== "undefined") {
+        $("#ku-gs-btn-desc").html("" + arguments[1].length + " groups indexed.");
+      }
+      // enable search field
+      $("#ku-gs-search").attr('disabled', false);
     }
 
     var btnClass = "ku-gs-btn-" + bClass;
     var descClass = "ku-gs-btn-desc-" + bClass;
 
     $("#ku-gs-progress-wrap").fadeOut("fast");
+    $(".ku-gs-bar").css('width', '0');
     $("#ku-gs-btn-update").removeClass(function (i, curr) {
       return curr;
     }).addClass(btnClass);
 
-    $("#ku-gs-btn-desc").addClass(descClass);
+    $("#ku-gs-btn-desc").removeClass(function (i, curr) {
+      return curr;
+    }).addClass(descClass);
     $("#ku-gs-btn-desc").fadeIn("slow");
   };
 };

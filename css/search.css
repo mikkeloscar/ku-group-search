@@ -170,6 +170,10 @@
   color: #5bb75b;
 }
 
+#ku-group-search .ku-gs-btn-desc-danger {
+  color: #da4f49;
+}
+
 #ku-group-search .ku-gs-progress .ku-gs-bar {
   -webkit-animation: progress-bar-stripes 2s linear infinite;
   background-color: #901a1e;
