@@ -40,18 +40,33 @@ var kuGroup = new function () {
   var self = this;
 
   var counter = 0;
-
   var totalCount = 0;
-
   var db = null;
-
   var crawlOptions = null;
 
-  self.init = function (options, total) {
-    crawlOptions = options;
 
+  self.init = function (options, total, parentId) {
+    crawlOptions = options;
     totalCount = total;
+
+    self.createForm(parentId);
+    self.initDB();
+    self.populateSelects();
+
+    // bind events
+    // update index
+    $("#ku-gs-btn-update").on("click", kuGroup.crawl);
+
+    // search on keyUp
+    $("#ku-gs-search").on("keyup", debounce(kuGroup.search, 300));
+
+    // search on category change
+    $("#ku-gs-cat-select").on("change", kuGroup.search);
+
+    // search on sub category change
+    $("#ku-gs-subcat-select").on("change", kuGroup.search);
   }
+
 
   self.createForm = function (parent) {
     var html = $('<div id="ku-group-search">\
@@ -70,8 +85,8 @@ var kuGroup = new function () {
         <select id="ku-gs-subcat-select">\
           <option value="all">Sub Category (All)</option>\
         </select>\
-        <button type="button" id="ku-gs-btn-update" class="btn btn-success">\
-        Update Index</button>\
+          <button type="button" id="ku-gs-btn-update" class="btn btn-success">\
+          Update Index</button>\
         <span id="ku-gs-btn-desc"></span>\
       </div>\
         <input type="text" name="search" id="ku-gs-search"\
@@ -84,6 +99,7 @@ var kuGroup = new function () {
     $(parent).prepend(html);
   };
 
+
   self.populateSelects = function () {
     var data = self.loadData();
 
@@ -92,6 +108,10 @@ var kuGroup = new function () {
       var subcatSelect = $("#ku-gs-subcat-select");
       var catList = [];
       var subcatList = [];
+
+      // clear selects
+      catSelect.html('<option value="all">Category (All)</option>');
+      subcatSelect.html('<option value="all">Sub Category (All)</option>');
 
       $(data.categories).each(function (i, cat) {
         if (jQuery.inArray(cat.cat, catList) == -1) {
@@ -109,21 +129,22 @@ var kuGroup = new function () {
   };
 
 
-  self.showResults = function (q) {
-    var html = $('<a class="ku-gs-result" href="' + q.url + '">\
-                  <span class="ku-gs-result-name">' + q.name + '</span>\
-                  <span class="ku-gs-result-desc">' + q.desc + '</span>\
+  self.showResults = function (query) {
+    var html = $('<a class="ku-gs-result" href="' + query.url + '">\
+                  <span class="ku-gs-result-name">' + query.name + '</span>\
+                  <span class="ku-gs-result-desc">' + query.desc + '</span>\
                   <span class="ku-gs-result-cat">\
                     <span class="ku-gs-cat">Category:</span> ' +
-                    q.cat +' > ' + q.sub_cat + '</span></a>');
+                    query.cat +' > ' + query.sub_cat + '</span></a>');
     $("#ku-gs-results").append(html);
   };
+
 
   self.initDB = function () {
     var data = self.loadData();
 
     if (data) {
-
+      // setup taffyDB
       var table = TAFFY(data.groups);
 
       db = table;
@@ -134,15 +155,12 @@ var kuGroup = new function () {
     }
   };
 
-  self.readDB = function () {
-    return db;
-  };
 
   self.loadData = function () {
     if (typeof localStorage["categories"] === "undefined" ||
         typeof localStorage["groups"] === "undefined" ||
         typeof localStorage["time"] === "undefined") {
-          data = null;
+      data = null;
     } else {
       var categories = JSON.parse(localStorage["categories"]);
       var groups = JSON.parse(localStorage["groups"]);
@@ -161,16 +179,19 @@ var kuGroup = new function () {
     return data;
   };
 
+
   self.saveData = function (categories, groups) {
     localStorage["categories"] = JSON.stringify(categories);
     localStorage["groups"] = JSON.stringify(groups);
     localStorage["time"] = Date.now();
   };
 
+
   self.increaseCount = function () {
     counter++;
-    $("#ku-gs-progress").trigger("progress");
+    self.updateProgress();
   };
+
 
   self.updateProgress = function () {
     var progress = 0;
@@ -187,13 +208,16 @@ var kuGroup = new function () {
     $("#ku-gs-bar").css("width", "" + progress + "%");
   };
 
+
   self.resetCounter = function () {
     counter = 0;
   };
 
+
   self.setTotalCount = function (num) {
     totalCount = num;
   };
+
 
   self.search = function () {
       self.query().done(function (msg) {
@@ -204,6 +228,7 @@ var kuGroup = new function () {
       });
   };
 
+
   self.query = function () {
     var term = $("#ku-gs-search").val();
 
@@ -211,11 +236,9 @@ var kuGroup = new function () {
     var dfd = $.Deferred();
 
     if (term.length > 1) {
-      console.log("searching..");
       //continue
       $("#ku-gs-results").html("");
 
-      var db = self.readDB();
       if (db) {
         // build query
         var query = [{name:{likenocase:term}}];
@@ -251,26 +274,24 @@ var kuGroup = new function () {
     return dfd.promise();
   };
 
+
   self.crawl = function () {
     self.resetCounter();
     $("#ku-gs-progress-wrap").show();
     var MyCategoryCrawler = new CategoryCrawler(crawlOptions);
 
     MyCategoryCrawler.crawl(self.increaseCount).done(function (cats, groups) {
-      console.log("All done");
-
-      console.log("Groups: " + groups.length);
-      
       self.saveData(cats, groups);
       self.initDB();
       self.populateSelects();
-
       self.updateBtn("ok", groups);
     });
   };
 
+
   self.updateBtn = function (status) {
     $("#ku-gs-btn-desc").html("");
+
     if (status === "none") {
       var bClass = "danger";
       // disable search field
@@ -281,7 +302,7 @@ var kuGroup = new function () {
     } else if (status === "ok") {
       var bClass = "success";
       if (typeof arguments[1] !== "undefined") {
-        $("#ku-gs-btn-desc").html("" + arguments[1].length + " groups indexed.");
+        $("#ku-gs-btn-desc").html(""+arguments[1].length+" groups indexed.");
       }
       // enable search field
       $("#ku-gs-search").attr('disabled', false);
@@ -304,15 +325,4 @@ var kuGroup = new function () {
 };
 
 // setup
-kuGroup.init(args, 4347);
-kuGroup.createForm("#ctl00_MSO_ContentDiv");
-kuGroup.initDB();
-kuGroup.populateSelects();
-
-// bind events
-$("#ku-gs-btn-update").on("click", kuGroup.crawl);
-$("#ku-gs-search").on("keyup", debounce(kuGroup.search, 300));
-$("#ku-gs-cat-select").on("change", kuGroup.search);
-$("#ku-gs-subcat-select").on("change", kuGroup.search);
-
-$("#ku-gs-progress").on("progress", kuGroup.updateProgress);
+kuGroup.init(args,4347,"#ctl00_MSO_ContentDiv");
