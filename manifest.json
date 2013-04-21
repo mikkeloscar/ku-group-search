@@ -2,7 +2,7 @@
     "name": "KU Groups Search",
     "version": "0.1",
     "manifest_version": 2,
-    "description": "Crawl kunet.dk and provide search for groups",
+    "description": "Crawls kunet.dk and provides group search functionality.",
     "icons": { "48": "images/icon48.png" },
     "permissions": ["https://groups.ku.dk/*"],
     "content_scripts": [

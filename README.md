@@ -1,6 +1,6 @@
 # KU Group Search - Chrome Extension
 
-Crawl kunet.dk and provide search for groups.
+Crawls kunet.dk and provides group search functionality.
 
 ## License
 
