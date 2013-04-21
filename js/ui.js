@@ -69,7 +69,7 @@ var ui = new function () {
   self.createForm = function (parent) {
     var html = $('<div id="ku-group-search">\
       <div class="ku-gs-wrap">\
-        <div class="ku-gs-title">Search for group</div>\
+        <h6 class="ku-gs-title">Search for group</h6>\
         <div class="ku-gs-options">\
           <div id="ku-gs-progress-wrap">\
             <span id="ku-gs-data">Updating index..</span>\
@@ -222,7 +222,7 @@ var ui = new function () {
 
   self.search = function () {
       self.query().done(function (msg) {
-        console.log(msg);
+        return;
       })
       .fail(function (err) {
         console.log(err);
