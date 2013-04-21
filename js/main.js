@@ -33,7 +33,7 @@ var debounce = function(func, wait, immediate) {
 
 
 /**
- * kuGroup namspace
+ * kuGroup namespace
  */
 var kuGroup = new function () {
   
@@ -55,16 +55,21 @@ var kuGroup = new function () {
 
     // bind events
     // update index
-    $("#ku-gs-btn-update").on("click", kuGroup.crawl);
+    $("#ku-gs-btn-update").on("click", self.crawl);
 
     // search on keyUp
-    $("#ku-gs-search").on("keyup", debounce(kuGroup.search, 300));
+    $("#ku-gs-search").on("keyup", debounce(self.search, 300));
+
+    // prevent submit on enter
+    $("#ku-gs-search").closest("form").submit(function (e) {
+      e.preventDefault();
+    });
 
     // search on category change
-    $("#ku-gs-cat-select").on("change", kuGroup.search);
+    $("#ku-gs-cat-select").on("change", self.search);
 
     // search on sub category change
-    $("#ku-gs-subcat-select").on("change", kuGroup.search);
+    $("#ku-gs-subcat-select").on("change", self.search);
   }
 
 
@@ -85,7 +90,7 @@ var kuGroup = new function () {
         <select id="ku-gs-subcat-select">\
           <option value="all">Sub Category (All)</option>\
         </select>\
-          <button type="button" id="ku-gs-btn-update" class="btn btn-success">\
+          <button type="button" id="ku-gs-btn-update" class="btn">\
           Update Index</button>\
         <span id="ku-gs-btn-desc"></span>\
       </div>\
@@ -146,6 +151,9 @@ var kuGroup = new function () {
     if (data) {
       // setup taffyDB
       var table = TAFFY(data.groups);
+
+      // update totalcount
+      totalCount = data.groups.length;
 
       db = table;
       self.updateBtn("ok");
@@ -237,7 +245,7 @@ var kuGroup = new function () {
 
     if (term.length > 1) {
       //continue
-      $("#ku-gs-results").html("");
+      $("#ku-gs-results").empty();
 
       if (db) {
         // build query
@@ -268,7 +276,7 @@ var kuGroup = new function () {
       }
 
     } else if (term.length == 0) {
-      $("#ku-gs-results").html("");
+      $("#ku-gs-results").empty();
       dfd.fail("Searchterm empty");
     }
     return dfd.promise();
@@ -290,7 +298,7 @@ var kuGroup = new function () {
 
 
   self.updateBtn = function (status) {
-    $("#ku-gs-btn-desc").html("");
+    $("#ku-gs-btn-desc").empty();
 
     if (status === "none") {
       var bClass = "danger";
